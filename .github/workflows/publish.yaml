@@ -47,7 +47,7 @@ jobs:
           context: .
           push: true
           # Use the dynamic app_version from Chart.yaml for the Docker image tag
-          tags: ghcr.io/${{ github.repository_owner }}/quake-watch-app:${{ steps.extract_metadata_action.outputs.app_version }}
+          tags: ghcr.io/${{ github.repository_owner }}/flask-app:${{ steps.extract_metadata_action.outputs.app_version }}
           load: false
           no-cache: false
           pull: false
