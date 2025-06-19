@@ -59,7 +59,7 @@ jobs:
 
       - name: Package & Push Helm Chart to GHCR OCI
         run: |
-          CHART_DIR="./k8s/${{ steps.extract_metadata_action.outputs.chart_directory }}"
+          CHART_DIR="./k8s/helm-charts/${{ steps.extract_metadata_action.outputs.chart_directory }}"
           CHART_NAME="${{ steps.extract_metadata_action.outputs.name }}"
           CHART_VERSION="${{ steps.extract_metadata_action.outputs.base_version }}"
 
