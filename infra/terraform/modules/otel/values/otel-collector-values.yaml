@@ -1,0 +1,18 @@
+mode: deployment
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+        http:
+  exporters:
+    logging:
+      loglevel: debug
+  processors:
+    batch: {}
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [logging]
