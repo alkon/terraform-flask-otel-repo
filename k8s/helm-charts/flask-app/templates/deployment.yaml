@@ -39,13 +39,9 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{ - if .Values.command }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           command: {{ toJson .Values.command }}
-          {{ - end }}
-          {{ - if .Values.args }}
           args: {{ toJson .Values.args }}
-          {{ - end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

@@ -1,28 +1,54 @@
 # Install cert-manager (needed for otel-operator)
+# resource "helm_release" "cert_manager" {
+#
+#   count = can(data.kubernetes_manifest.cert_manager_crds.manifest.apiVersion) ? 0 : 1
+#   #count = try(data.helm_release.existing_cert_manager.status, "") != "deployed" ? 1 : 0
+#
+#   name       = "cert-manager"
+#   repository = "https://charts.jetstack.io"
+#   chart      = "cert-manager"
+#   version    = "v1.14.2"
+#   namespace  = "cert-manager"
+#
+#   create_namespace = true
+#
+#   set {
+#     name  = "installCRDs"
+#     value = "true"
+#   }
+# }
+
+# resource "kubernetes_manifest" "cert_manager_crds" {
+#   manifest = yamldecode(data.http.cert_manager_crds.response_body)
+# }
+
 resource "helm_release" "cert_manager" {
   name       = "cert-manager"
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
-  namespace  = "cert-manager"
   version    = "v1.18.1"
+  namespace  = "cert-manager"
+
   create_namespace = true
+
+  # Ensure Helm does not try to re-apply CRDs if they exist
+  skip_crds = true
 
   set {
     name  = "installCRDs"
     value = "true"
   }
+
+  # Optional: prevent upgrade until CRDs manually handled
+  lifecycle {
+    ignore_changes = [set]
+  }
+
+  # depends_on = [
+  #   kubernetes_manifest.cert_manager_crds
+  # ]
 }
 
-# Install OpenTelemetry Operator
-# resource "helm_release" "otel_operator" {
-#   name       = "opentelemetry-operator"
-#   repository = "https://open-telemetry.github.io/opentelemetry-helm-charts"
-#   chart      = "opentelemetry-operator"
-#   namespace  = "default"
-#   version    = "0.43.0"
-#
-#   depends_on = [helm_release.cert_manager]
-# }
 
 # Install OpenTelemetry Operator
 resource "helm_release" "otel_operator" {
@@ -48,13 +74,7 @@ resource "helm_release" "otel_operator" {
     name  = "admissionWebhooks.certManager.enabled"
     value = "true"
   }
-
-  # set {
-  #   name  = "createCRDs"
-  #   value = "true"
-  # }
 }
-
 
 # Install OpenTelemetry Collector
 resource "helm_release" "otel_collector" {
