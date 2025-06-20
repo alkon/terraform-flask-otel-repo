@@ -32,3 +32,10 @@ variable "github_repo_owner" {
   description = "The owner of the GitHub repository (e.g., your GitHub username or organization name)."
   type        = string
 }
+
+variable "enable_namespace_creation" {
+  description = "Whether to create the app namespace (disable if it already exists)"
+  type        = bool
+  default     = true
+}
+
