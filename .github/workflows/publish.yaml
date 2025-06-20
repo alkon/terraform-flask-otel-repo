@@ -89,11 +89,23 @@ jobs:
       - name: Terraform Apply with dynamic vars
         working-directory: infra/terraform
         run: |
+
+          CHART_NAME="${{ steps.extract_metadata_action.outputs.name }}"
+          CHART_VERSION="${{ steps.extract_metadata_action.outputs.base_version }}"
+          IMAGE_VERSION="${{ steps.extract_metadata_action.outputs.app_version }}"
+          REPO_OWNER="${{ github.repository_owner }}"
+
+          echo "Applying Terraform with the following values:"
+          echo "Chart Name: $CHART_NAME"
+          echo "Chart Version: $CHART_VERSION"
+          echo "Image Version: $IMAGE_VERSION"
+          echo "GitHub Repo Owner: $REPO_OWNER"
+
           terraform apply -auto-approve \
             -var="k3d_cluster_name=tf-cluster" \
-            -var="github_repo_owner=${{ needs.build-and-publish.outputs.repository_owner }}" \
-            -var="helm_chart_name=${{ needs.build-and-publish.outputs.chart_name }}" \
-            -var="helm_chart_version=${{ needs.build-and-publish.outputs.base_chart_version }}" \
-            -var="docker_image_tag=${{ needs.build-and-publish.outputs.image_tag }}" \
+            -var="github_repo_owner=$REPO_OWNER" \
+            -var="helm_chart_name=$CHART_NAME" \
+            -var="helm_chart_version=$CHART_VERSION" \
+            -var="docker_image_tag=$IMAGE_VERSION" \
             -var="docker_image_repo=ghcr.io"
         shell: bash
