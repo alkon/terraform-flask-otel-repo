@@ -89,6 +89,7 @@ jobs:
       - name: Terraform Apply with dynamic vars
         working-directory: infra/terraform
         run: |
+
           CHART_NAME="${{ steps.extract_metadata_action.outputs.name }}"
           CHART_VERSION="${{ steps.extract_metadata_action.outputs.base_version }}"
           IMAGE_VERSION="${{ steps.extract_metadata_action.outputs.app_version }}"

@@ -28,3 +28,7 @@ autoscaling:
 nodeSelector: {}
 affinity: {}
 tolerations: {}
+
+command: []
+args: []
+

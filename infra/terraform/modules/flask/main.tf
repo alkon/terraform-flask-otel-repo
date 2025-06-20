@@ -1,62 +1,22 @@
-variable "image" {}
-variable "instrumentation_name" {}
-
-resource "kubernetes_deployment" "flask" {
+resource "kubernetes_namespace" "app_namespace" {
   metadata {
-    name = "flask-app"
+    name = local.effective_namespace_name # Using the local value
     labels = {
-      app = "flask"
-    }
-  }
-
-  spec {
-    replicas = 1
-
-    selector {
-      match_labels = {
-        app = "flask"
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = "flask"
-        }
-
-        annotations = {
-          "instrumentation.opentelemetry.io/inject-python" = var.instrumentation_name
-        }
-      }
-
-      spec {
-        container {
-          name  = "flask"
-          image = var.image
-          port {
-            container_port = 5000
-          }
-        }
-      }
+      "app.kubernetes.io/name" = var.app_name_prefix
+      "managed-by"             = "terraform"
     }
   }
 }
 
-resource "kubernetes_service" "flask_service" {
+resource "kubernetes_service_account" "app_service_account" {
   metadata {
-    name = "flask-service"
-  }
-
-  spec {
-    selector = {
-      app = "flask"
+    name      = "${var.app_name_prefix}-sa"
+    namespace = kubernetes_namespace.app_namespace.metadata[0].name
+    labels = {
+      "app.kubernetes.io/name" = var.app_name_prefix
+      "managed-by"             = "terraform"
+      # Merge additional labels if variable added for them
+      # Optional: merge(var.additional_labels, { ... })
     }
-
-    port {
-      port        = 80
-      target_port = 5000
-    }
-
-    type = "LoadBalancer"
   }
 }
