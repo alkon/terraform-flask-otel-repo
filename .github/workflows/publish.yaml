@@ -23,6 +23,7 @@ jobs:
       image_tag: ${{ steps.extract_metadata_action.outputs.app_version }}
       base_chart_version: ${{ steps.extract_metadata_action.outputs.base_version }} # This is the Helm chart's own version
       argocd_app_name: ${{ steps.extract_metadata_action.outputs.app_name }}
+      repository_owner: ${{ github.repository_owner }}
 
     steps:
       - name: Checkout Code
@@ -88,14 +89,11 @@ jobs:
       - name: Terraform Apply with dynamic vars
         working-directory: infra/terraform
         run: |
-          echo "Applying Terraform with the following values:"
-          echo "chart_name=${{ inputs.chart_name }}"
-          echo "chart_version=${{ inputs.chart_version }}"
-          echo "chart_repo=${{ inputs.chart_repo }}"
-          echo "image=${{ inputs.image }}"
-
           terraform apply -auto-approve \
-            -var="chart_name=${{ inputs.chart_name }}" \
-            -var="chart_version=${{ inputs.chart_version }}" \
-            -var="chart_repo=${{ inputs.chart_repo }}" \
-            -var="image=${{ inputs.image }}"
+            -var="k3d_cluster_name=ci-k3d-cluster-${{ github.run_id }}" \
+            -var="github_repo_owner=${{ needs.build-and-publish.outputs.repository_owner }}" \
+            -var="helm_chart_name=${{ needs.build-and-publish.outputs.chart_name }}" \
+            -var="helm_chart_version=${{ needs.build-and-publish.outputs.base_chart_version }}" \
+            -var="docker_image_tag=${{ needs.build-and-publish.outputs.image_tag }}" \
+            -var="docker_image_repo=ghcr.io"
+        shell: bash
