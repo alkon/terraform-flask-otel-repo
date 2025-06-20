@@ -90,7 +90,7 @@ jobs:
         working-directory: infra/terraform
         run: |
           terraform apply -auto-approve \
-            -var="k3d_cluster_name=ci-k3d-cluster-${{ github.run_id }}" \
+            -var="k3d_cluster_name=tf-cluster" \
             -var="github_repo_owner=${{ needs.build-and-publish.outputs.repository_owner }}" \
             -var="helm_chart_name=${{ needs.build-and-publish.outputs.chart_name }}" \
             -var="helm_chart_version=${{ needs.build-and-publish.outputs.base_chart_version }}" \
