@@ -6,7 +6,7 @@ image:
   # REMOVED: 'tag: "latest"'. The deployment template will now default to Chart.AppVersion (1.0.0).
 
 service:
-  type: ClusterIP
+  type: LoadBalancer #ClusterIP
   port: 5000
   targetPort: 5000
 
