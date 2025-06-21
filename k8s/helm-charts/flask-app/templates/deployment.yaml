@@ -42,11 +42,11 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           {{- with .Values.command }}
           command:
-            {{ toJson .Values.command | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
           {{- with .Values.args }}
           args:
-            {{ toJson .Values.args | nindent 12 }}
+            {{ toYaml . | nindent 12 }}
           {{- end }}
           ports:
             - name: http
