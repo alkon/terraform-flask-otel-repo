@@ -1,10 +1,18 @@
 resource "helm_release" "flask_app_release" {
   name       = var.helm_chart_name
-  repository = "${var.helm_chart_repo}/${var.github_repo_owner}"
-  chart      = var.helm_chart_name
-  version    = var.helm_chart_version
   namespace  = module.flask_app_infra.namespace_name
   create_namespace = true # Added this back, good practice to ensure namespace exists
+
+  chart = var.use_local_chart ? "${path.module}/../../k8s/helm-charts/flask-app" : var.helm_chart_name
+  # chart      = var.helm_chart_name
+
+  repository = var.use_local_chart ? null : "${var.helm_chart_repo}/${var.github_repo_owner}"
+  # repository = "${var.helm_chart_repo}/${var.github_repo_owner}"
+
+  version = var.use_local_chart ? null : var.helm_chart_version
+  # version    = var.helm_chart_version
+
+  values = var.use_local_chart ? [file("${path.module}/../../k8s/helm-charts/flask-app/values.yaml")] : []
 
   set {
     name  = "image.repository"
@@ -15,24 +23,6 @@ resource "helm_release" "flask_app_release" {
     name  = "image.tag"
     value = var.docker_image_tag
   }
-
-  set {
-    name  = "command"
-    value = "[\"flask\"]"
-  }
-
-  set {
-    name  = "args"
-    value = "[\"run\", \"--host=0.0.0.0\", \"--port=5000\"]"
-  }
-
-  # If your Helm chart has a value for serviceAccount.name to use an existing SA,
-  # you can pass the one created by the infrastructure module:
-  # set {
-  #   name  = "serviceAccount.name"
-  #   value = module.flask_app_infra.service_account_name
-  # }
-  # Note: You'll need to disable serviceAccount.create in your chart's values.yaml if using this.
 
   depends_on = [
     module.otel,             # Ensure OTel infrastructure is ready

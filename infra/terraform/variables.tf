@@ -39,3 +39,8 @@ variable "enable_namespace_creation" {
   default     = true
 }
 
+variable "use_local_chart" {
+  description = "If true, use a local Helm chart instead of an OCI registry chart"
+  type        = bool
+  default     = false
+}
