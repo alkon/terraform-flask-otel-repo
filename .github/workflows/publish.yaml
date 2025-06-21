@@ -16,6 +16,7 @@ jobs:
     permissions:
       contents: read
       packages: write # Crucial for pushing Docker images and Helm charts to GHCR
+      id-token: write
 
     outputs:
       chart_name: ${{ steps.extract_metadata_action.outputs.name }} # Access output from the custom action
