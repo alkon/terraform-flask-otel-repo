@@ -44,15 +44,31 @@ jobs:
           chart-path: './k8s' # Pass the base path to your chart directory
 
       - name: Build and Push Docker Image to GHCR
-        uses: docker/build-push-action@v5 # Using the recommended action
+        uses: docker/build-push-action@v6
         with:
           context: ./app
+          dockerfile: ./app/Dockerfile
           push: true
-          # Use the dynamic app_version from Chart.yaml for the Docker image tag
           tags: ghcr.io/${{ github.repository_owner }}/flask-app:${{ steps.extract_metadata_action.outputs.app_version }}
-          load: false
-          no-cache: false
-          pull: false
+          no-cache: false # enable cache for faster builds
+
+      # Debug step - remove later
+      - name: Inspect built image and check CMD
+        run: |
+          IMAGE=ghcr.io/${{ github.repository_owner }}/flask-app:${{ steps.extract_metadata_action.outputs.app_version }}
+
+          echo "Pulling image: $IMAGE"
+          docker pull "$IMAGE"
+
+          echo "Inspecting image config..."
+          CMD=$(docker inspect "$IMAGE" | jq -r '.[0].Config.Cmd | @sh')
+
+          if [ "$CMD" == "null" ] || [ -z "$CMD" ]; then
+            echo "ERROR: CMD not defined in the image!"
+            exit 1
+          else
+            echo "CMD found in image: $CMD"
+          fi    
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
