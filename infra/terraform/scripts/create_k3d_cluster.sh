@@ -9,7 +9,7 @@ K3D_CLUSTER_NAME="$1" # First argument is the cluster name
 HOST_PORT="$2"        # Second argument is the host port
 K8S_PORT="$3"         # Third argument is the k8s port
 
-echo "Checking for k3d cluster: ${K3D_CLUSTER_NAME}"
+echo "Checking for k3d uster: ${K3D_CLUSTER_NAME}"
 
 # Check if the k3d cluster already exists.
 # `grep -q` is for quiet mode, suppresses output.

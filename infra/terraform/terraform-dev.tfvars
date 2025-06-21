@@ -14,7 +14,7 @@ helm_chart_version  = ""
 
 # Docker image details (still need in local DEV test)
 docker_image_repo   = "ghcr.io"
-docker_image_tag    = "v0.1.0"
+docker_image_tag    = "1.2.0"
 
 command = ["python"]
 args = ["app.py", "--port=5000", "--log-level=debug"]
