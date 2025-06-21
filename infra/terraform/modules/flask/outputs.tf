@@ -5,7 +5,9 @@
 
 output "namespace_name" {
   value = try(kubernetes_namespace.app_namespace.metadata[0].name, local.effective_namespace_name)
+  # value = try(kubernetes_namespace.app_namespace[0].metadata[0].name, local.effective_namespace_name)
 }
+
 
 
 output "service_account_name" {

@@ -81,6 +81,11 @@ jobs:
           helm push "$EXPECTED_CHART_PACKAGE_FILENAME" "$GHCR_OCI_TARGET" --debug
         shell: bash
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::841162669220:role/GitHubActionsTerraformRole
+          aws-region: us-east-1
 
       - name: Terraform Init
         working-directory: infra/terraform
