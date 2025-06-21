@@ -40,8 +40,14 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
-          command: {{ toJson .Values.command }}
-          args: {{ toJson .Values.args }}
+          {{ - if .Values.command}}
+          command:
+            {{ toJson .Values.command | nindent 12 }}
+          {{ - end }}
+          {{ - if .Values.args }}
+          args:
+            {{ toJson .Values.args | nindent 12 }}
+          {{ - end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
