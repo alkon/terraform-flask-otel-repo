@@ -4,13 +4,10 @@ resource "helm_release" "flask_app_release" {
   create_namespace = true # Added this back, good practice to ensure namespace exists
 
   chart = var.use_local_chart ? "${path.module}/../../k8s/helm-charts/flask-app" : var.helm_chart_name
-  # chart      = var.helm_chart_name
 
   repository = var.use_local_chart ? null : "${var.helm_chart_repo}/${var.github_repo_owner}"
-  # repository = "${var.helm_chart_repo}/${var.github_repo_owner}"
 
   version = var.use_local_chart ? null : var.helm_chart_version
-  # version    = var.helm_chart_version
 
   values = var.use_local_chart ? [file("${path.module}/../../k8s/helm-charts/flask-app/values.yaml")] : []
 

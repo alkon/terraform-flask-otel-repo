@@ -1,18 +1,31 @@
 #!/bin/bash
 
 CLUSTER_NAME="${cluster_name}"
-PORT_MAPPINGS="${port_mappings}"
-AGENTS="${agent_count}"
+HOST_PORT="${host_port}"
+CONTAINER_PORT="${container_port}"
+NODE_FILTER="${node_filter}"
+PROTOCOL="${protocol}"
+AGENTS=${agent_count}
 SERVER_ARGS="${server_args}"
 
-echo "Checking if k3d cluster '$CLUSTER_NAME' exists..."
+PORT_MAPPING="${host_port}:${container_port}/${protocol}@${node_filter}"
 
-if ! k3d cluster list | grep -q "$CLUSTER_NAME"; then
+echo "Checking if k3d cluster '$CLUSTER_NAME' exists..."
+echo "Checking port mapping '$PORT_MAPPING'"
+
+if ! k3d cluster list | grep -q "^$CLUSTER_NAME"; then
   echo "Creating k3d cluster: $CLUSTER_NAME"
   k3d cluster create "$CLUSTER_NAME" \
     --agents "$AGENTS" \
-    $PORT_MAPPINGS \
+    --port $PORT_MAPPING \
     $SERVER_ARGS
 else
-  echo "Cluster '$CLUSTER_NAME' already exists. Skipping creation."
+  echo "Cluster '$CLUSTER_NAME' already exists. Checking status..."
+  STATUS=$(k3d cluster list "$CLUSTER_NAME" | grep "$CLUSTER_NAME" | awk '{print $3}')
+  if [[ "$STATUS" == "stopped" ]]; then
+    echo "Starting cluster '$CLUSTER_NAME'..."
+    k3d cluster start "$CLUSTER_NAME"
+  else
+    echo "Cluster '$CLUSTER_NAME' is already running."
+  fi
 fi
