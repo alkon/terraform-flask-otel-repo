@@ -1,0 +1,96 @@
+name: "K3d Terraform Handler"
+description: |
+  Composite GitHub Action to:
+    1. Check if k3d cluster exists
+    2. Run terraform apply to create cluster only if needed
+    3. Wait for readiness
+    4. Run full terraform apply with dynamic variables
+
+inputs:
+  cluster_name:
+    description: "Name of the k3d cluster"
+    required: true
+  terraform_directory:
+    description: "Terraform configuration directory"
+    required: false
+    default: "."
+  chart_name:
+    description: "Name of the Helm chart"
+    required: true
+  chart_version:
+    description: "Version of the Helm chart"
+    required: true
+  image_version:
+    description: "Docker image tag version"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check if k3d cluster is running
+      id: check-k3d
+      shell: bash
+      run: |
+        echo "Checking if k3d cluster '$CLUSTER_NAME' is running..."
+        if k3d cluster list | grep -q "^$CLUSTER_NAME"; then
+          echo "k3d cluster exists."
+          echo "k3d_up=true" >> "$GITHUB_ENV"
+        else
+          echo "k3d cluster does not exist."
+          echo "k3d_up=false" >> "$GITHUB_ENV"
+        fi
+      env:
+        CLUSTER_NAME: ${{ inputs.cluster_name }}
+
+    - name: Terraform Init
+      shell: bash
+      run: terraform init
+      working-directory: ${{ inputs.terraform_directory }}
+
+    - name: Terraform Apply (Create k3d Cluster)
+      if: env.k3d_up == 'false'
+      shell: bash
+      run: terraform apply -target=null_resource.create_k3d_cluster -auto-approve
+      working-directory: ${{ inputs.terraform_directory }}
+
+    - name: Wait for k3d cluster to be ready
+      if: env.k3d_up == 'false'
+      shell: bash
+      run: |
+        echo "Waiting for k3d cluster to be ready..."
+        for i in {1..12}; do
+          if kubectl get nodes | grep -q ' Ready '; then
+            echo "Cluster is ready."
+            break
+          fi
+          echo "Waiting... ($i/12)"
+          sleep 5
+        done
+        if ! kubectl get nodes | grep -q ' Ready '; then
+          echo "Cluster is not ready after timeout."
+          exit 1
+        fi
+
+    - name: Build dynamic Terraform variables
+      shell: bash
+      run: |
+        echo "Building dynamic terraform variables..."
+        CHART_NAME="${{ inputs.chart_name }}"
+        CHART_VERSION="${{ inputs.chart_version }}"
+        IMAGE_VERSION="${{ inputs.image_version }}"
+        REPO_OWNER="${{ github.repository_owner }}"
+
+        TF_VARS="\
+          -var=\"k3d_cluster_name=tf-cluster\" \
+          -var=\"github_repo_owner=$REPO_OWNER\" \
+          -var=\"helm_chart_name=$CHART_NAME\" \
+          -var=\"helm_chart_version=$CHART_VERSION\" \
+          -var=\"docker_image_tag=$IMAGE_VERSION\" \
+          -var=\"docker_image_repo=ghcr.io\""
+
+        echo "TF_VARS=$TF_VARS" >> "$GITHUB_ENV"
+
+    - name: Terraform Apply (All)
+      shell: bash
+      run: terraform apply -auto-approve $TF_VARS
+      working-directory: ${{ inputs.terraform_directory }}

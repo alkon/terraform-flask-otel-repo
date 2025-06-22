@@ -4,6 +4,12 @@ variable "k3d_cluster_name" {
   default     = "tf-cluster"
 }
 
+variable "k3d_context_name" {
+  description = "Name of the k3d context"
+  type        = string
+  default     = "k3d-tf-cluster"
+}
+
 variable "helm_chart_name" {
   type = string
 }
@@ -43,4 +49,10 @@ variable "use_local_chart" {
   description = "If true, use a local Helm chart instead of an OCI registry chart"
   type        = bool
   default     = false
+}
+
+variable "k8s_enabled" {
+  description = "Whether to apply Kubernetes and Helm resources"
+  type        = bool
+  default     = true
 }
