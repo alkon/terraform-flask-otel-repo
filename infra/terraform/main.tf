@@ -15,3 +15,17 @@ module "flask_app_infra" {
     null_resource.create_k3d_cluster
   ]
 }
+
+module "argocd" {
+  source = "./modules/argocd"
+
+  flask_app_namespace = module.flask_app_infra.namespace_name
+
+  providers = {
+    kubectl = kubectl
+  }
+
+  depends_on = [
+    null_resource.create_k3d_cluster
+  ]
+}

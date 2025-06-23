@@ -56,3 +56,13 @@ variable "k8s_enabled" {
   type        = bool
   default     = true
 }
+
+variable "argocd_host_port" {
+  type    = string
+  default = "30080"
+}
+
+variable "argocd_container_port" {
+  type    = string
+  default = "30080"
+}
