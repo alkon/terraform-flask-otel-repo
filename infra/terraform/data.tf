@@ -9,5 +9,8 @@ data "template_file" "create_k3d_script" {
     protocol          = "tcp"
     agent_count = 1
     server_args = ""
+
+    argocd_host_port      = "30080"
+    argocd_container_port = "30080"
   }
 }
