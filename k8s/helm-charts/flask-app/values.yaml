@@ -11,7 +11,7 @@ service:
   targetPort: 5000
 
 serviceAccount:
-  create: true # This must be set to true for the ServiceAccount to be created
+  create: false # in terraform apply: prevent Helm to re-create the ServiceAccount
   name: ""     # Leave empty to use the default generated name
 
 resources:
