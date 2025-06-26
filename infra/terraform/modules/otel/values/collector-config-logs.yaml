@@ -1,0 +1,31 @@
+mode: deployment
+
+image:
+  repository: otel/opentelemetry-collector-contrib
+  tag: 0.128.0
+
+config:
+  receivers:
+    filelog:
+      include:
+        - /var/log/containers/*.log
+      start_at: beginning
+      operators:
+        - type: json_parser
+          timestamp:
+            parse_from: attributes.time
+          severity:
+            parse_from: attributes.level
+
+  exporters:
+    debug: {}
+
+  processors:
+    batch: {}
+
+  service:
+    pipelines:
+      logs:
+        receivers: [filelog]
+        processors: [batch]
+        exporters: [debug]

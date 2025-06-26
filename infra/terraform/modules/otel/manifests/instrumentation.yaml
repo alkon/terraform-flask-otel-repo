@@ -1,11 +1,11 @@
 apiVersion: opentelemetry.io/v1alpha1
 kind: Instrumentation
 metadata:
-  name: ${instrumentation_name} # templated variable
-  namespace: ${namespace}      # templated variable
+  name: ${instrumentation_name}
+  namespace: ${namespace}
 spec:
   exporter:
-    endpoint: http://otel-collector:4317
+    endpoint: http://otel-collector.default.svc.cluster.local:4317
   propagators:
     - tracecontext
     - baggage
@@ -13,3 +13,10 @@ spec:
     type: parentbased_always_on
   python:
     image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:latest
+    env:
+      - name: OTEL_PYTHON_AUTO_INSTRUMENTATION_ENABLED
+        value: "true"
+      - name: OTEL_PYTHON_METRICS_ENABLED
+        value: "true"
+      - name: OTEL_METRICS_EXPORTER
+        value: "otlp"

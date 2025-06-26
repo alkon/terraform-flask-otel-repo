@@ -29,3 +29,19 @@ module "argocd" {
     null_resource.create_k3d_cluster
   ]
 }
+
+module "loki" {
+  source = "./modules/loki"
+}
+
+module "grafana" {
+  source = "./modules/grafana"
+
+  depends_on = [
+    module.loki
+  ]
+}
+
+# module "redis" {
+#   source = "./modules/redis"
+# }

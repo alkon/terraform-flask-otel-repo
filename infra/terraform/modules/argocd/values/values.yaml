@@ -1,3 +1,9 @@
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
 server:
   service:
     type: NodePort
@@ -6,3 +12,20 @@ server:
   ingress:
     enabled: false
   insecure: true
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+repoServer:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+applicationSet:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
