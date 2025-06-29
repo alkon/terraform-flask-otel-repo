@@ -6,7 +6,9 @@ resource "helm_release" "grafana" {
   version    = "9.2.7"
 
   values = [
-    file("${path.module}/values/datasources.yaml")
+    templatefile("${path.module}/values/datasources.yaml.tpl", {
+      prometheus_url = var.prometheus_url
+    })
   ]
 
   set {

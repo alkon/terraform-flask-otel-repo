@@ -1,0 +1,13 @@
+image:
+  repository: ${helm_values.image.repository}
+  tag: ${helm_values.image.tag}
+opentelemetry:
+  enabled: ${helm_values.opentelemetry.enabled}
+  protocol: ${helm_values.opentelemetry.protocol}
+  collectorEndpoint: ${helm_values.opentelemetry.collectorEndpoint}
+  serviceName: ${helm_values.opentelemetry.serviceName}
+  resourceAttributes:
+    service.version: ${helm_values.opentelemetry.resourceAttributes["service.version"]}
+  environmentVariables: ${yamlencode(helm_values.opentelemetry.environmentVariables)}
+podAnnotations:
+  opentelemetry.io/instrumentation: ${helm_values.podAnnotations["opentelemetry.io/instrumentation"]}

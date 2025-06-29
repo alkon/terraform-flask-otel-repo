@@ -4,7 +4,14 @@ controller:
     serviceMonitor:
       enabled: true
 
+configs:
+  cm:
+    accounts.admin: apiKey,login
+
 server:
+  config:
+    initialAdminPassword: "bFeMUopbcvuG17Fc"
+    admin.enabled: "true"
   service:
     type: NodePort
     nodePortHttp: 30080
@@ -28,4 +35,5 @@ applicationSet:
     enabled: true
     serviceMonitor:
       enabled: true
+
 

@@ -7,7 +7,6 @@ variable "flask_app_name" {
 variable "repo_url" {
   description = "Git repository URL that contains the Helm chart"
   type        = string
-  default     = "https://github.com/alkon/terraform-flask-otel-repo.git"
 }
 
 variable "repo_revision" {
@@ -25,4 +24,16 @@ variable "chart_path" {
 variable "flask_app_namespace" {
   description = "Kubernetes namespace where the Flask app will be deployed"
   type        = string
+}
+
+variable "flask_app_helm_values" {
+  description = "A map of values to be passed to the Flask application Helm chart via ArgoCD."
+  type        = any
+  default     = {} # Provide a default empty map to make it optional
+}
+
+variable "enable_argocd_application" {
+  description = "A flag to enable or disable the creation of the Argo CD application resource."
+  type        = bool
+  default     = true  # Set to true by default to create the resource
 }

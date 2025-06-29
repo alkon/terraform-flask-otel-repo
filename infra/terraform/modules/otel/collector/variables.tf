@@ -3,3 +3,8 @@ variable "otel_collector_type" {
   type        = string
   default     = "metrics"
 }
+
+variable "prometheus_remote_write_endpoint" {
+  description = "The full URL for the Prometheus remote write endpoint."
+  type        = string
+}

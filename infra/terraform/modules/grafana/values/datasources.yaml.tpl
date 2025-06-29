@@ -1,0 +1,9 @@
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: "${prometheus_url}"
+        isDefault: true
