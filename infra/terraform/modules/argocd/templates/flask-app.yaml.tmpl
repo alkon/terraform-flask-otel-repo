@@ -12,6 +12,8 @@ spec:
     helm:
       valueFiles:
         - values.yaml
+      values: |
+        ${helm_values_yaml}
   destination:
     server: https://kubernetes.default.svc
     namespace: ${target_namespace}

@@ -1,4 +1,17 @@
+controller:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+configs:
+  cm:
+    accounts.admin: apiKey,login
+
 server:
+  config:
+    initialAdminPassword: "bFeMUopbcvuG17Fc"
+    admin.enabled: "true"
   service:
     type: NodePort
     nodePortHttp: 30080
@@ -6,3 +19,21 @@ server:
   ingress:
     enabled: false
   insecure: true
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+repoServer:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+applicationSet:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+

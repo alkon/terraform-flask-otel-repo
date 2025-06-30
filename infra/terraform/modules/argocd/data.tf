@@ -1,9 +1,8 @@
-# locals {
-#   flask_app_manifest_yaml = templatefile("${path.module}/templates/flask-app.tmpl.yaml", {
-#     app_name         = var.flask_app_name
-#     repo_url         = var.repo_url
-#     revision         = var.repo_revision
-#     chart_path       = var.chart_path
-#     target_namespace = var.flask_app_namespace
-#   })
-# }
+# Look up the service created by the Helm chart to get its NodePort
+data "kubernetes_service" "argocd_server" {
+  depends_on = [helm_release.argocd]
+  metadata {
+    name      = "argocd-server" # This is the standard service name from the Helm chart
+    namespace = kubernetes_namespace.argocd.metadata[0].name
+  }
+}
