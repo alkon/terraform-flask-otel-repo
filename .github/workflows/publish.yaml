@@ -112,6 +112,22 @@ jobs:
 #          chart_version: ${{ steps.extract_metadata_action.outputs.base_version }}
 #          image_version: ${{ steps.extract_metadata_action.outputs.app_version }}
 
+      - name: Get Argo CD admin password
+        id: get_admin_pw
+        run: |
+          ADMIN_PW=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)
+          echo "ADMIN_PW=$ADMIN_PW" >> $GITHUB_ENV
+
+      - name: Login to Argo CD and Get Token
+        id: login
+        run: |
+          argocd login localhost:30443 \
+            --username admin \
+            --password "$ADMIN_PW" \
+            --insecure --grpc-web
+          TOKEN=$(argocd account generate-token --account admin)
+          echo "TF_VAR_argocd_auth_token=$TOKEN" >> $GITHUB_ENV
+
       - name: Terraform Init
         working-directory: infra/terraform
         run: terraform init

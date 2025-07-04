@@ -1,4 +1,4 @@
-variable "prometheus_url" {
-  description = "The URL of the Prometheus data source for Grafana."
+variable "thanos_query_url" {
+  description = "The URL for the Thanos Query service."
   type        = string
 }

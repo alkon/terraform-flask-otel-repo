@@ -7,14 +7,9 @@ resource "helm_release" "grafana" {
 
   values = [
     templatefile("${path.module}/values/datasources.yaml.tpl", {
-      prometheus_url = var.prometheus_url
+      thanos_query_url = var.thanos_query_url
     })
   ]
 
-  set {
-    name  = "adminPassword"
-    value = "admin" # Optional: set secure password
-  }
-
-  create_namespace = false
+  create_namespace = true
 }

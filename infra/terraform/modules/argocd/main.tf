@@ -4,31 +4,23 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-# Deploys Argo CD Server
+# Deploy Argo CD Server
 resource "helm_release" "argocd" {
   name       = "argocd"
-  namespace  = kubernetes_namespace.argocd.metadata[0].name
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
   version    = "8.1.1"
 
-  create_namespace = false
+  namespace  = kubernetes_namespace.argocd.metadata[0].name
+  create_namespace = false # Already created
 
-  values = [
-    file("${path.module}/values/values.yaml")
-  ]
-
-  # wait            = true      # Waits for all Kubernetes resources to become ready :contentReference[oaicite:1]{index=1}
-  # atomic          = true      # On failure, roll back and purge partial installs :contentReference[oaicite:2]{index=2}
-  # cleanup_on_fail = true      # Deletes newly created resources if install fails :contentReference[oaicite:3]{index=3}
-
-
-  timeout = 600 # 10 minutes (in seconds)
+  values = [file("${path.module}/values/values.yaml")]
+  timeout = 600 # seconds
 
   depends_on = [kubernetes_namespace.argocd]
 }
 
-# The native ArgoCD resource
+# Deploy Argo CD app
 resource "argocd_application" "flask_app" {
   count = var.enable_argocd_application ? 1 : 0
 
@@ -68,31 +60,22 @@ resource "argocd_application" "flask_app" {
     }
   }
 
-  depends_on = [helm_release.argocd]
+  depends_on = [null_resource.wait_for_argocd_api] #[helm_release.argocd]
 }
 
-# Data source to retrieve the ArgoCD initial admin password from the Kubernetes secret
-data "kubernetes_secret" "argocd_admin_password" {
-  metadata {
-    name      = "argocd-initial-admin-secret"
-    namespace = kubernetes_namespace.argocd.metadata[0].name
+resource "null_resource" "wait_for_argocd_api" {
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "Waiting for Argo CD API to become reachable..."
+      for i in {1..30}; do
+        curl -k --silent --fail http://localhost:30080/version && exit 0
+        echo "Still not reachable... retrying in 5s"
+        sleep 5
+      done
+      echo "Timed out waiting for Argo CD" >&2
+      exit 1
+    EOT
   }
-
-  # Ensure we only try to read this secret after the Helm chart has created it
-  depends_on = [helm_release.argocd]
-}
-
-# Decode the password outside of Terraform's functions
-# to avoid UTF-8 errors from random binary data.
-data "external" "argocd_admin_password_decoded" {
-  program = [
-    "sh",
-    "-c",
-    "kubectl get secret argocd-initial-admin-secret -n argocd -o json | jq -r '.data.password' | base64 --decode | jq -Rns '{password: .}'"
-  ]
-
-  # Ensure the secret exists before we try to read it
-  depends_on = [helm_release.argocd]
 }
 
 

@@ -8,10 +8,7 @@ resource "null_resource" "wait_for_otel_crds" {
     })
   }
 
-  # Ensure the OTel Operator module is deployed
-  depends_on = [
-    module.otel_operator
-  ]
+  depends_on = [module.otel_operator]
 }
 
 resource "kubernetes_namespace" "flask_app_namespace" {
@@ -42,9 +39,33 @@ resource "null_resource" "wait_for_cert_manager_webhook" {
     command = "kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/component=webhook -n cert-manager --timeout=300s"
   }
 
-  # This waiter depends on the cert_manager module to ensure it's been deployed first
-  depends_on = [
-    module.cert_manager
-  ]
+  # Wait for cert_manager module to be deployed first
+  depends_on = [module.cert_manager]
 }
+
+resource "null_resource" "wait_for_argocd_api" {
+  provisioner "local-exec" {
+    command = <<EOT
+echo "Waiting for argocd-server pod to be Ready..."
+
+for i in {1..30}; do
+  READY=$(kubectl get pod -n argocd -l app.kubernetes.io/name=argocd-server -o jsonpath="{.items[0].status.containerStatuses[0].ready}")
+  if [ "$READY" = "true" ]; then
+    echo "argocd-server pod is Ready."
+    exit 0
+  fi
+  echo "Attempt $i: pod not ready yet, retrying in 5s..."
+  sleep 5
+done
+
+echo "Timed out waiting for argocd-server pod to become Ready." >&2
+exit 1
+EOT
+  }
+}
+
+
+
+
+
 

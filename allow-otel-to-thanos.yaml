@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-otel-to-thanos-receiver
+  namespace: thanos-ns
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: receive
+      app.kubernetes.io/instance: thanos-receiver
+      app.kubernetes.io/name: thanos
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              team: otel
+      ports:
+        - port: 19291
+          protocol: TCP
+  policyTypes:
+    - Ingress

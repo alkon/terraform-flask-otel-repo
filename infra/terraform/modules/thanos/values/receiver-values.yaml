@@ -1,0 +1,35 @@
+receiver:
+  enabled: true
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    ports:
+      remoteWrite: 19291
+      http: 10901
+  persistentVolume:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+query:
+  enabled: false
+queryFrontend:
+  enabled: false
+storegateway:
+  enabled: false
+compactor:
+  enabled: false
+ruler:
+  enabled: false
+bucketweb:
+  enabled: false
+memcached:
+  enabled: false
+memcachedExporter:
+  enabled: false

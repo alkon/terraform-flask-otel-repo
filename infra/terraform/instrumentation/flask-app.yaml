@@ -7,6 +7,7 @@ spec:
   exporter:
     endpoint: http://otel-collector-opentelemetry-collector.${collector_ns}.svc.cluster.local:4317
   python:
+    volumeClaimTemplate: {}
     env:
       - name: OTEL_METRICS_EXPORTER
         value: otlp
@@ -17,4 +18,6 @@ spec:
       - name: OTEL_TRACES_EXPORTER
         value: otlp
       - name: OTEL_SERVICE_NAME
-        value: ${otel_service_name} # Accept a template variable
+        value: ${otel_service_name}
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector-opentelemetry-collector.${collector_ns}.svc.cluster.local:4317

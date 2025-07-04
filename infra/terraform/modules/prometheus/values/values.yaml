@@ -11,6 +11,23 @@ server:
       memory: "2Gi"
   service:
     type: ClusterIP
+  # --- Add extra scrape configs for OpenTelemetry Collector ---
+  extraScrapeConfigs:
+    - job_name: 'otel-collector'
+      kubernetes_sd_configs:
+        - role: endpoints
+          namespaces:
+            names: ['otel-collector-ns'] # Namespace where your collector is
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_service_name]
+          regex: 'otel-collector-metrics' # Name of the Service you'll create for collector metrics
+          action: keep
+        - source_labels: [__meta_kubernetes_endpoint_port_name]
+          regex: 'prometheus-metrics' # Name of the port in the collector service
+          action: keep
+  # --- Enable Prometheus Lifecycle API ---
+  extraFlags:
+    - "--web.enable-lifecycle"
 alertmanager:
   enabled: false
   service:

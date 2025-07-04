@@ -13,8 +13,9 @@ terraform {
 resource "helm_release" "otel_operator" {
   name       = "opentelemetry-operator"
   repository = "https://open-telemetry.github.io/opentelemetry-helm-charts"
+  # repository = "oci://ghcr.io/open-telemetry/opentelemetry-helm-charts"
   chart      = "opentelemetry-operator"
-  version    = "0.90.3"
+  version    = "0.90.4"
 
   namespace  = "otel-operator-ns"
   create_namespace = true
