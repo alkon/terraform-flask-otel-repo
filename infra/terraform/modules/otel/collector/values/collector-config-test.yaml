@@ -1,4 +1,5 @@
-# Used hostmetrics to generate internal metrics and pushes them to prometheusremotewrite ONLY.
+# This configuration is for a temporary test to isolate Collector -> Receiver communication.
+# It uses hostmetrics to generate internal metrics and pushes them *only* to prometheusremotewrite.
 mode: deployment
 image:
   repository: otel/opentelemetry-collector-contrib
@@ -24,7 +25,7 @@ config:
     debug:
       verbosity: detailed
     prometheusremotewrite:
-      endpoint: ${thanos_remote_write_endpoint}
+      endpoint: http://thanos-receiver-receive.thanos-ns.svc.cluster.local:19291/api/v1/receive # <--- Hardcoded endpoint
       tls:
         insecure_skip_verify: true
       resource_to_telemetry_conversion:

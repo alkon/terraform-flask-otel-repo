@@ -1,8 +1,5 @@
 terraform {
   required_providers {
-    # helm = {
-    #   source = "hashicorp/helm"
-    # }
     kubernetes = {
       source = "hashicorp/kubernetes"
     }
@@ -19,13 +16,13 @@ resource "helm_release" "otel_collector" {
   namespace        = "otel-collector-ns"
   create_namespace = true
 
-  values = [file("${path.module}/values/collector-config-test.yaml")]
+  # values = [file("${path.module}/values/collector-config-test.yaml")]
 
-  # values = [
-  #   templatefile("collector-config.yaml.tpl", {
-  #     thanos_remote_write_endpoint = var.thanos_remote_write_endpoint
-  #   })
-  # ]
+  values = [
+    templatefile("collector-config.yaml.tpl", {
+      thanos_remote_write_endpoint = var.thanos_remote_write_endpoint
+    })
+  ]
 }
 
 # This service exposes the internal debug and health endpoint (:13133)
