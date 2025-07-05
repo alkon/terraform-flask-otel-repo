@@ -112,27 +112,31 @@ jobs:
         run: terraform init
 
       - name: Export TF_VARS only
+        shell: bash
         run: |
           CHART_NAME="${{ steps.extract_metadata_action.outputs.name }}"
           CHART_VERSION="${{ steps.extract_metadata_action.outputs.base_version }}"
           IMAGE_VERSION="${{ steps.extract_metadata_action.outputs.app_version }}"
           REPO_OWNER="${{ github.repository_owner }}"
 
-          TF_VARS="\
-            -var=k3d_cluster_name=tf-cluster \
+          export TF_VARS="-var=k3d_cluster_name=tf-cluster \
             -var=github_repo_owner=$REPO_OWNER \
             -var=helm_chart_name=$CHART_NAME \
             -var=helm_chart_version=$CHART_VERSION \
             -var=docker_image_tag=$IMAGE_VERSION \
             -var=docker_image_repo=ghcr.io"
-
-          echo "TF_VARS=$TF_VARS" >> $GITHUB_ENV
             
+            echo "TF_VARS content:"
+            echo "$TF_VARS"
+            
+            echo "TF_VARS=${TF_VARS}" >> "$GITHUB_ENV"
+           
 
       - name: Terraform Apply Infra Only (without Argo CD App)
         working-directory: infra/terraform
         shell: bash
         run: |
+          echo "TF_VARS: $TF_VARS"
           terraform apply -auto-approve -var="enable_argocd_app=false" $TF_VARS
 
       - name: Terraform Apply Argo CD App
@@ -141,4 +145,5 @@ jobs:
         env:
           ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
         run: |
+          echo "TF_VARS: $TF_VARS"
           terraform apply -auto-approve -var="enable_argocd_app=true" $TF_VARS
