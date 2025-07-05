@@ -46,8 +46,12 @@ jobs:
         with:
           chart-path: './k8s' # Pass the base path to your chart directory
 
-      - name: Debug GITHUB_TOKEN (REMOVE AFTER USE)
-        run: echo "${{ secrets.GITHUB_TOKEN }}"
+      # TEMPORARY DEBUG STEP: Copy the GITHUB_TOKEN from the logs for manual testing.
+      # REMOVE THIS STEP IMMEDIATELY AFTER USE!
+      - name: Get GITHUB_TOKEN for manual test (TEMPORARY & DANGEROUS)
+        run: echo "::add-mask::${{ secrets.GITHUB_TOKEN }}" && echo "TEMP_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+        # The 'add-mask' command tries to mask it, but it might still briefly appear.
+        # Copy the value of TEMP_GITHUB_TOKEN from the 'Set up job' or 'Run Get GITHUB_TOKEN...' step output.
 
       - name: Build and Push Docker Image to GHCR
         uses: docker/build-push-action@v6
