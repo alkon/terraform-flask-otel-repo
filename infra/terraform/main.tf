@@ -50,16 +50,16 @@ module "grafana" {
 }
 
 # Test module
-module "flask_app_test" {
-  source = "./modules/flask-test"
-
-  namespace = "flask-app-ns"
-
-  depends_on = [
-    module.otel_operator,
-    module.otel_collector
-  ]
-}
+# module "flask_app_test" {
+#   source = "./modules/flask-test"
+#
+#   namespace = "flask-app-ns"
+#
+#   depends_on = [
+#     module.otel_operator,
+#     module.otel_collector
+#   ]
+# }
 
 # 7. ArgoCD Server
 module "argocd_server" {
