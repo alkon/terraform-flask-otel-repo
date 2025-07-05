@@ -132,12 +132,36 @@ jobs:
             echo "TF_VARS=${TF_VARS}" >> "$GITHUB_ENV"
            
 
-      - name: Terraform Apply Infra Only (without Argo CD App)
+#      - name: Terraform Apply Infra Only (without Argo CD App)
+#        working-directory: infra/terraform
+#        shell: bash
+#        run: |
+#          echo "TF_VARS: $TF_VARS"
+#          terraform apply -auto-approve -var="enable_argocd_app=false" $TF_VARS
+
+      - name: Terraform Apply with dynamic vars
         working-directory: infra/terraform
-        shell: bash
         run: |
-          echo "TF_VARS: $TF_VARS"
-          terraform apply -auto-approve -var="enable_argocd_app=false" $TF_VARS
+
+          CHART_NAME="${{ steps.extract_metadata_action.outputs.name }}"
+          CHART_VERSION="${{ steps.extract_metadata_action.outputs.base_version }}"
+          IMAGE_VERSION="${{ steps.extract_metadata_action.outputs.app_version }}"
+          REPO_OWNER="${{ github.repository_owner }}"
+
+          echo "Applying Terraform with the following values:"
+          echo "Chart Name: $CHART_NAME"
+          echo "Chart Version: $CHART_VERSION"
+          echo "Image Version: $IMAGE_VERSION"
+          echo "GitHub Repo Owner: $REPO_OWNER"
+
+          terraform apply -auto-approve \
+            -var="enable_argocd_app=false" \
+            -var="k3d_cluster_name=tf-cluster" \
+            -var="github_repo_owner=$REPO_OWNER" \
+            -var="helm_chart_name=$CHART_NAME" \
+            -var="helm_chart_version=$CHART_VERSION" \
+            -var="docker_image_tag=$IMAGE_VERSION" \
+            -var="docker_image_repo=ghcr.io"
 
       - name: Terraform Apply Argo CD App
         working-directory: infra/terraform
