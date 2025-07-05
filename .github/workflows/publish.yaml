@@ -46,6 +46,9 @@ jobs:
         with:
           chart-path: './k8s' # Pass the base path to your chart directory
 
+      - name: Debug GITHUB_TOKEN (REMOVE AFTER USE)
+        run: echo "${{ secrets.GITHUB_TOKEN }}"
+
       - name: Build and Push Docker Image to GHCR
         uses: docker/build-push-action@v6
         with:
