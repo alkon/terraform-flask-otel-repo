@@ -9,57 +9,87 @@ module "cert_manager" {
 module "otel_operator" {
   source = "./modules/otel/operator"
 
+  depends_on = [null_resource.wait_for_cert_manager_webhook]
+}
+
+# 3. Thanos (Metrics Receiver and Query)
+module "thanos" {
+  source = "./modules/thanos"
   depends_on = [
-    null_resource.wait_for_cert_manager_webhook
+    module.otel_operator # Thanos Receiver depends on Operator for namespace
   ]
 }
 
-# 3. OpenTelemetry Collector (receives and exports telemetry)
+# 4. OpenTelemetry Collector (receives and exports telemetry)
 module "otel_collector" {
   source = "./modules/otel/collector"
   depends_on = [
-    module.otel_operator # Ensure the operator is ready
+    module.otel_operator,
+    module.thanos # OTel Collector depends on Thanos Receiver being ready
   ]
-  # Using the full FQDN as you prefer
-  prometheus_remote_write_endpoint = "http://${module.prometheus.service_name}.${module.prometheus.namespace}.svc.cluster.local:${module.prometheus.remote_write_port}/api/v1/write"
+
+  # Update endpoint to point to Thanos Receiver using the new variable name
+  # thanos_remote_write_endpoint = "http://thanos-receiver.thanos-ns.svc.cluster.local:19291/api/v1/receive"
+  thanos_remote_write_endpoint = "http://thanos-receiver-receive.thanos-ns.svc.cluster.local:19291/api/v1/receive" # <-- CRITICAL CHANGE
 }
 
-# 4. Prometheus (metrics backend)
-module "prometheus" {
-  source = "./modules/prometheus"
-}
+# 5. Prometheus (metrics backend - for other scrapes) - DISABLED FOR NOW
+# module "prometheus" {
+#   source = "./modules/prometheus"
+# }
 
-# 5. Grafana (visualization dashboard)
+# 6. Grafana (visualization dashboard)
 module "grafana" {
   source = "./modules/grafana"
-  # Pass the Prometheus service endpoint to Grafana
-  prometheus_url = "http://${module.prometheus.service_name}.${module.prometheus.namespace}.svc.cluster.local:${module.prometheus.remote_write_port}"
+  # Pass the Thanos Query service endpoint to Grafana using the new variable name
+  thanos_query_url = "http://thanos-query-query.thanos-ns.svc.cluster.local:9090" # <-- CRITICAL CHANGE
+
   depends_on = [
-    module.prometheus
+    module.thanos # Grafana now depends on Thanos Query being ready
   ]
 }
 
-# 6. ArgoCD (GitOps tool)
-module "argocd" {
-  source = "./modules/argocd"
+# Test module
+module "flask_app_test" {
+  source = "./modules/flask-test"
 
-  # Pass the value from the root module's variable to the child module's variable
-  enable_argocd_application = var.enable_argocd_application
-
-  # Pass Flask app details for ArgoCD Application manifest
-  flask_app_name      = var.helm_chart_name
-  repo_url            = "https://github.com/${var.github_repo_owner}/${var.git_repo_name}.git"
-  repo_revision       = "HEAD" # This can be dynamic from CI/CD
-  chart_path          = "k8s/helm-charts/flask-app"
-  flask_app_namespace = var.flask_app_namespace
-  # Pass dynamic Helm values for the Flask app to ArgoCD
-  flask_app_helm_values = local.flask_app_helm_values
+  namespace = "flask-app-ns"
 
   depends_on = [
+    module.otel_operator,
+    module.otel_collector
+  ]
+}
+
+# 7. ArgoCD Server
+module "argocd_server" {
+  source = "./modules/argocd-server"
+
+  providers = {
+    kubernetes = kubernetes
+    helm       = helm
+    kubectl    = kubectl
+  }
+}
+
+# 8. ArgoCD app
+module "argocd_app" {
+  count  = var.enable_argocd_app ? 1 : 0
+
+  source = "./modules/argocd-app"
+  providers = {argocd = argocd.main}
+
+  depends_on = [
+    null_resource.wait_for_argocd_api,
     module.otel_collector,
     module.grafana,
-    # Ensure the Flask app's namespace exists before deploying the ArgoCD's Application manifest
-    kubernetes_namespace.flask_app_namespace,
+    kubernetes_namespace.flask_app_namespace
   ]
-}
 
+  repo_url              = "https://github.com/${var.github_repo_owner}/${var.git_repo_name}.git"
+  repo_revision         = "HEAD"
+  chart_path            = "k8s/helm-charts/flask-app"
+  flask_app_name        = var.helm_chart_name
+  flask_app_namespace   = var.flask_app_namespace
+  flask_app_helm_values = local.flask_app_helm_values
+}

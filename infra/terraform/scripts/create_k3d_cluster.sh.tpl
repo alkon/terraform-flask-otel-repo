@@ -22,6 +22,7 @@ if ! k3d cluster list | grep -q "^${CLUSTER_NAME}"; then
   k3d cluster create "$CLUSTER_NAME" \
     --agents "$AGENT_COUNT" \
     --port "$PORT_MAPPING" \
+    --port "30080-30090:30080-30090@server:0" \
     $SERVER_ARGS \
     --wait >&2
 else

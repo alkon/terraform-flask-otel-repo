@@ -1,7 +1,6 @@
 output "service_name" {
   description = "The name of the Prometheus server service."
-  # Bitnami chart naming convention is <release_name>-<chart_name>
-  value = "${helm_release.prometheus.name}-${helm_release.prometheus.chart}"
+  value = "prometheus-server"
 }
 
 output "namespace" {

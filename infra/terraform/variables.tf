@@ -86,7 +86,7 @@ variable "use_local_chart" {
   default     = false
 }
 
-### Argo CD - specific
+### Argo CD - specific ########################################################
 variable "argocd_host_port" {
   type    = string
   default = "30080"
@@ -97,14 +97,24 @@ variable "argocd_container_port" {
   default = "30080"
 }
 
-variable "enable_argocd_application" {
-  description = "A flag to enable or disable the creation of the Argo CD application resource."
-  type        = bool
-  default     = true
+variable "argocd_server" {
+  type        = string
+  description = "Argo CD server address"
 }
 
 variable "argocd_auth_token" {
-  description = "The authentication token for the Argo CD API."
   type        = string
-  sensitive   = true # Marks the value as sensitive in logs
+  sensitive   = true
+  description = "Argo CD auth token"
+}
+
+variable "argocd_insecure" {
+  type        = bool
+  default     = true
+  description = "Allow insecure connection to Argo CD"
+}
+
+variable "enable_argocd_app" {
+  type    = bool
+  default = false
 }

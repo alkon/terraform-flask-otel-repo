@@ -56,9 +56,13 @@ docker-compose.local.yml
 
 # Add any other project-specific files or directories you want to ignore
 
-# Terraform
+### Terraform
 infra/terraform/.terraform/
 infra/terraform/*.tfstate
 infra/terraform/*.tfstate.backup
 infra/terraform/.terraform.lock.hcl
+
+# Used to manage the long-term Argo CD App token
+infra/terraform/.env.locals
+
 

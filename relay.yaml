@@ -1,0 +1,16 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+      grpc:
+
+exporters:
+  prometheusremotewrite:
+    endpoint: http://thanos-receiver-receive.thanos-ns.svc.cluster.local:19291
+    compression: snappy
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheusremotewrite]

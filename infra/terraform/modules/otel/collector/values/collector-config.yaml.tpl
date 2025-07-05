@@ -14,9 +14,12 @@ config:
     debug:
       verbosity: detailed
     prometheusremotewrite:
-      endpoint: "${prometheus_remote_write_endpoint}" # <-- This is now a template variable
+      endpoint: ${thanos_remote_write_endpoint} # Use the passed variable
+      # Convert OTLP metrics into Prometheus-friendly format
+      resource_to_telemetry_conversion:
+        enabled: true
       tls:
-        insecure_skip_verify: true
+        insecure_skip_verify: true # Keep this for now, adjust if you implement TLS on Thanos Receiver
   processors:
     batch: {}
     memory_limiter:
@@ -36,7 +39,7 @@ config:
         processors:
           - batch
         exporters:
-          - prometheusremotewrite
+          - prometheusremotewrite # Ensure metrics pipeline uses this exporter
           - debug
       traces:
         receivers:

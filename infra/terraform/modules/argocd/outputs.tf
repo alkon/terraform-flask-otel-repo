@@ -8,12 +8,12 @@ output "argocd_server_node_port" {
 }
 
 # Export the decoded admin password from the secret
-output "argocd_admin_password" {
-  description = "The decoded initial admin password for ArgoCD."
-  # Get the password from the external data source's result map
-  value       = data.external.argocd_admin_password_decoded.result.password
-  sensitive   = true # Mask the value
-}
+# output "argocd_admin_password" {
+#   description = "The decoded initial admin password for ArgoCD."
+#   # Get the password from the external data source's result map
+#   value       = data.external.argocd_admin_password_decoded.result.password
+#   sensitive   = true # Mask the value
+# }
 
 output "flask_app_name" {
   description = "The name of the Argo CD application resource, if created."

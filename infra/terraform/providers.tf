@@ -47,13 +47,16 @@ provider "kubectl" {
   config_context = "k3d-${data.external.k3d_cluster_bootstrap.result.cluster_name}"
 }
 
+# provider "argocd" {
+#   alias   = "main"
+#   server_addr = var.argocd_server
+#   auth_token  = var.argocd_auth_token
+#   insecure    = var.argocd_insecure
+# }
 provider "argocd" {
-  # Used the NodePort address to connect to the ArgoCD server.
-  server_addr = "localhost:8082" #"${data.kubernetes_nodes.cluster_node.nodes[0].status.0.addresses.0.address}:${module.argocd.argocd_server_node_port}"
-
-  # The generated authentication token. This is the primary credential.
-  auth_token  = var.argocd_auth_token
-
-  # For clusters with self-signed certificates.
-  insecure = true
+  alias       = "main"
+  server_addr = "localhost:30080"
+  auth_token  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcmdvY2QiLCJzdWIiOiJhZG1pbjphcGlLZXkiLCJuYmYiOjE3NTE1NTkxOTYsImlhdCI6MTc1MTU1OTE5NiwianRpIjoiYzg0MDgzNDMtMDY1My00NTVmLTlhNmItZmZjYjU1ZWMxNzc4In0.uYBdMWZbOKVWaghjqXXp4rCTehlQLGZcEV-2NEyr2Sc"
+  insecure    = true
+  plain_text  = true # no need in variable for this
 }

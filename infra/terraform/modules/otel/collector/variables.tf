@@ -4,7 +4,13 @@ variable "otel_collector_type" {
   default     = "metrics"
 }
 
-variable "prometheus_remote_write_endpoint" {
-  description = "The full URL for the Prometheus remote write endpoint."
+# variable "prometheus_remote_write_endpoint" {
+#   description = "The full URL for the Prometheus remote write endpoint."
+#   type        = string
+# }
+
+variable "thanos_remote_write_endpoint" {
+  description = "The full URL for the Thanos remote write endpoint."
   type        = string
 }
+
