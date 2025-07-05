@@ -19,7 +19,7 @@ resource "helm_release" "otel_collector" {
   # values = [file("${path.module}/values/collector-config-test.yaml")]
 
   values = [
-    templatefile("collector-config.yaml.tpl", {
+    templatefile("${path.module}/values/collector-config.yaml.tpl", {
       thanos_remote_write_endpoint = var.thanos_remote_write_endpoint
     })
   ]
