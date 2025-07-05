@@ -113,3 +113,8 @@ variable "argocd_insecure" {
   default     = true
   description = "Allow insecure connection to Argo CD"
 }
+
+variable "enable_argocd_app" {
+  type    = bool
+  default = false
+}

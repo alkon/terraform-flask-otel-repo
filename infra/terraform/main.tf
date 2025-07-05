@@ -74,6 +74,8 @@ module "argocd_server" {
 
 # 8. ArgoCD app
 module "argocd_app" {
+  count  = var.enable_argocd_app ? 1 : 0
+
   source = "./modules/argocd-app"
   providers = {argocd = argocd.main}
 
