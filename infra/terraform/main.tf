@@ -49,7 +49,7 @@ module "grafana" {
   ]
 }
 
-# Test module
+#Test module
 # module "flask_app_test" {
 #   source = "./modules/flask-test"
 #
@@ -77,7 +77,11 @@ module "argocd_app" {
   count  = var.enable_argocd_app ? 1 : 0
 
   source = "./modules/argocd-app"
-  providers = {argocd = argocd.main}
+
+  # Pass aliased provider from the TF root
+  providers = {
+    argocd = argocd.main
+  }
 
   depends_on = [
     null_resource.wait_for_argocd_api,

@@ -16,9 +16,15 @@ locals {
       tag        = var.docker_image_tag
     }
     opentelemetry = local.otel_instrumentation_values
+
+    # podAnnotations = {
+    #   "opentelemetry.io/instrumentation" = "flask-app-ns/flask-auto-instrumentation"
+    # }
+
     podAnnotations = {
-      "opentelemetry.io/instrumentation" = "flask-app-ns/flask-auto-instrumentation"
+      "opentelemetry.io/instrumentation" = "${module.otel_operator.namespace}/flask-auto-instrumentation"
     }
+
   }
 }
 

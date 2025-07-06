@@ -17,7 +17,7 @@ resource "helm_release" "otel_operator" {
   chart      = "opentelemetry-operator"
   version    = "0.90.4"
 
-  namespace  = "otel-operator-ns"
+  namespace = var.otel_operator_namespace
   create_namespace = true
 
   set {
