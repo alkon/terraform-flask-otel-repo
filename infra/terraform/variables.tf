@@ -99,11 +99,14 @@ variable "argocd_container_port" {
 
 variable "argocd_server" {
   type        = string
+  default = ""
+  sensitive   = true
   description = "Argo CD server address"
 }
 
 variable "argocd_auth_token" {
   type        = string
+  default = ""
   sensitive   = true
   description = "Argo CD auth token"
 }
