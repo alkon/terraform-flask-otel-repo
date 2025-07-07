@@ -29,6 +29,9 @@ nodeSelector: {}
 affinity: {}
 tolerations: {}
 
+otel:
+  enabled: true
+
 # --- SEMI-AUTOMATED :) OTEL INJECTION ---
 #otel:
 #  enabled: true

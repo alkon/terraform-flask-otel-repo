@@ -43,26 +43,47 @@ resource "null_resource" "wait_for_cert_manager_webhook" {
   depends_on = [module.cert_manager]
 }
 
+
 resource "null_resource" "wait_for_argocd_api" {
+
   provisioner "local-exec" {
     command = <<EOT
-echo "Waiting for argocd-server pod to be Ready..."
+    echo "Waiting for argocd-server pod to be Ready using kubectl wait..."
 
-for i in {1..30}; do
-  READY=$(kubectl get pod -n argocd -l app.kubernetes.io/name=argocd-server -o jsonpath="{.items[0].status.containerStatuses[0].ready}")
-  if [ "$READY" = "true" ]; then
-    echo "argocd-server pod is Ready."
-    exit 0
-  fi
-  echo "Attempt $i: pod not ready yet, retrying in 5s..."
-  sleep 5
-done
+    # Replace 'argocd' with the actual namespace your Argo CD server is deployed in
+    # Replace 'app.kubernetes.io/name=argocd-server' with the exact selector for your Argo CD server pod
+    kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/name=argocd-server -n argocd --timeout=180s
 
-echo "Timed out waiting for argocd-server pod to become Ready." >&2
-exit 1
-EOT
-  }
+    if [ $? -eq 0 ]; then
+      echo "argocd-server pod is Ready."
+    else
+      echo "Timed out or failed waiting for argocd-server pod to become Ready." >&2
+      exit 1
+    fi
+    EOT
+      }
 }
+
+# resource "null_resource" "wait_for_argocd_api" {
+#   provisioner "local-exec" {
+#     command = <<EOT
+# echo "Waiting for argocd-server pod to be Ready..."
+#
+# for i in {1..30}; do
+#   READY=$(kubectl get pod -n argocd -l app.kubernetes.io/name=argocd-server -o jsonpath="{.items[0].status.containerStatuses[0].ready}")
+#   if [ "$READY" = "true" ]; then
+#     echo "argocd-server pod is Ready."
+#     exit 0
+#   fi
+#   echo "Attempt $i: pod not ready yet, retrying in 5s..."
+#   sleep 5
+# done
+#
+# echo "Timed out waiting for argocd-server pod to become Ready." >&2
+# exit 1
+# EOT
+#   }
+# }
 
 
 
