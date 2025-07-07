@@ -6,15 +6,15 @@ image:
 
 config:
   receivers:
-    hostmetrics:
-      collection_interval: 5s
-      scrapers:
-        cpu:
-        memory:
-        disk:
-        filesystem:
-        network:
-        load:
+#    hostmetrics:
+#      collection_interval: 5s
+#      scrapers:
+#        cpu:
+#        memory:
+#        disk:
+#        filesystem:
+#        network:
+#        load:
     otlp:
       protocols:
         grpc: {}
@@ -55,7 +55,7 @@ config:
       metrics:
         receivers:
           - otlp
-          - hostmetrics
+#          - hostmetrics
         processors:
           - batch
         exporters:
