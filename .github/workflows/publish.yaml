@@ -127,24 +127,32 @@ jobs:
           echo "Argo CD server deployment is ready."
 
       - name: Export TF_VARS only
-        shell: bash
-        run: |
-          CHART_NAME="${{ steps.extract_metadata_action.outputs.name }}"
-          CHART_VERSION="${{ steps.extract_metadata_action.outputs.base_version }}"
-          IMAGE_VERSION="${{ steps.extract_metadata_action.outputs.app_version }}"
-          REPO_OWNER="${{ github.repository_owner }}"
-
-          export TF_VARS="-var=k3d_cluster_name=tf-cluster \
-            -var=github_repo_owner=$REPO_OWNER \
-            -var=helm_chart_name=$CHART_NAME \
-            -var=helm_chart_version=$CHART_VERSION \
-            -var=docker_image_tag=$IMAGE_VERSION \
-            -var=docker_image_repo=ghcr.io"
+          shell: bash
+          run: |
+            CHART_NAME="${{ steps.extract_metadata_action.outputs.name }}"
+            CHART_VERSION="${{ steps.extract_metadata_action.outputs.base_version }}"
+            IMAGE_VERSION="${{ steps.extract_metadata_action.outputs.app_version }}"
+            REPO_OWNER="${{ github.repository_owner }}"
             
-            echo "TF_VARS content:"
-            echo "$TF_VARS"
+            # Get the password from the output of the 'get_admin_password' step
+            ARGOCD_PASSWORD="${{ steps.get_admin_password.outputs.admin_password }}"
             
-            echo "TF_VARS=${TF_VARS}" >> "$GITHUB_ENV"
+            # Construct TF_VARS to include ALL variables, including Argo CD auth
+            export TF_VARS="-var=k3d_cluster_name=tf-cluster \
+              -var=github_repo_owner=$REPO_OWNER \
+              -var=helm_chart_name=$CHART_NAME \
+              -var=helm_chart_version=$CHART_VERSION \
+              -var=docker_image_tag=$IMAGE_VERSION \
+              -var=docker_image_repo=ghcr.io \
+              -var=argocd_username=admin \
+              -var=argocd_password=$ARGOCD_PASSWORD \
+              -var=argocd_server=localhost:30080 \
+              -var=argocd_insecure=true"
+            
+              echo "TF_VARS content:"
+              echo "$TF_VARS"
+            
+              echo "TF_VARS=${TF_VARS}" >> "$GITHUB_ENV"
            
 
       - name: Terraform Apply Infra Only (without Argo CD App)
