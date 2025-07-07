@@ -104,11 +104,23 @@ variable "argocd_server" {
   description = "Argo CD server address"
 }
 
-variable "argocd_auth_token" {
+# variable "argocd_auth_token" {
+#   type        = string
+#   default = ""
+#   sensitive   = true
+#   description = "Argo CD auth token"
+# }
+
+variable "argocd_username" {
   type        = string
-  default = ""
+  description = "Argo CD username for authentication."
+  default     = "admin"
+}
+
+variable "argocd_password" {
+  type        = string
   sensitive   = true
-  description = "Argo CD auth token"
+  description = "Argo CD password for authentication."
 }
 
 variable "argocd_insecure" {
