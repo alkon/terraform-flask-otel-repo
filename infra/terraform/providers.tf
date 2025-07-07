@@ -49,11 +49,12 @@ provider "kubectl" {
 
 provider "argocd" {
   alias   = "main"
+
   server_addr = var.argocd_server
-
-  # Use 'Dummy Token' when enable_argocd_app = flase
-  auth_token = var.enable_argocd_app ? var.argocd_auth_token : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-
+  # auth_token = var.argocd_auth_token
+  username    = var.argocd_username
+  password    = var.argocd_password
   insecure    = var.argocd_insecure
   plain_text  = true # no need in variable for this
+
 }
