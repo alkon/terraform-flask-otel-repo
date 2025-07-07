@@ -1,3 +1,5 @@
+# templates/deployment.yaml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,20 +15,17 @@ spec:
       {{- include "flask-app.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
+        instrumentation.opentelemetry.io/inject-python: "true"
       labels:
         {{- include "flask-app.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-#      {{- with .Values.imagePullSecrets }}
-#      imagePullSecrets:
-#        {{- toYaml . | nindent 8 }}
-#      {{- end }}
       serviceAccountName: {{ include "flask-app.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
@@ -40,16 +39,6 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
-          {{/* --- START OF NEW OTEL SEMI-AUTOMATION BLOCK --- */}}
-          {{- if .Values.otel.enabled }}
-          command:
-            {{- toYaml .Values.otel.command | nindent 12 }}
-          args:
-            {{- toYaml .Values.otel.args | nindent 12 }}
-          env:
-            {{- toYaml .Values.otel.env | nindent 12 }}
-          {{- end }}
-          {{/* --- END OF NEW OTEL SEMI-AUTOMATION BLOCK --- */}}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
