@@ -29,7 +29,6 @@ nodeSelector: {}
 affinity: {}
 tolerations: {}
 
-deployment:
-  podAnnotations:
-    instrumentation.opentelemetry.io/inject-otel-agent: "flask-app-instrumentation"
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-otel-agent: "flask-app-instrumentation"
 #    instrumentation.opentelemetry.io/inject-python: "true" <-- Old-fashion
