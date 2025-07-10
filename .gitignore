@@ -64,5 +64,6 @@ infra/terraform/.terraform.lock.hcl
 
 # Used to manage the long-term Argo CD App token
 infra/terraform/.env.locals
+infra/terraform/.env.locals.*
 
 
