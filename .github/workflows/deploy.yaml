@@ -1,0 +1,89 @@
+name: Deploy the Python App & Helm Chart
+
+on:
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  deploy-and-distibute:
+    runs-on: self-hosted
+    # needs: lint
+    # needs: [lint, test] # Uncomment to reactivate both lint and test
+
+    permissions:
+      contents: read
+      packages: write # Crucial for pushing Docker images and Helm charts to GHCR
+      id-token: write
+
+    steps:
+      - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            role-to-assume: arn:aws:iam::841162669220:role/GitHubActionsTerraformRole
+            aws-region: us-east-1
+
+      - name: Terraform Init
+        working-directory: infra/terraform
+        run: terraform init
+
+      - name: Retrieve Argo CD Admin Password
+        id: get_admin_password # ID to reference output
+        run: |
+          ARGOCD_ADMIN_PASSWORD=$(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 --decode)
+          echo "admin_password=$ARGOCD_ADMIN_PASSWORD" >> "$GITHUB_OUTPUT"
+          echo "::add-mask::$ARGOCD_ADMIN_PASSWORD" # Mask the password in logs     
+
+      - name: Restart Argo CD Server for Config Reload and Wait
+        run: |
+          echo "Restarting argocd-server pods to ensure ConfigMap changes are applied..."
+          kubectl rollout restart deployment argocd-server -n argocd
+          echo "Waiting for argocd-server deployment to be ready..."
+          kubectl rollout status deployment/argocd-server -n argocd --timeout=5m
+          echo "Argo CD server deployment is ready."
+
+      - name: Export TF_VARS only
+        shell: bash
+        run: |
+          CHART_NAME="${{ steps.extract_metadata_action.outputs.name }}"
+          CHART_VERSION="${{ steps.extract_metadata_action.outputs.base_version }}"
+          IMAGE_VERSION="${{ steps.extract_metadata_action.outputs.app_version }}"
+          REPO_OWNER="${{ github.repository_owner }}"
+          
+          # Get the password from the output of the 'get_admin_password' step
+          ARGOCD_PASSWORD="${{ steps.get_admin_password.outputs.admin_password }}"
+          
+          # Construct TF_VARS to include ALL variables, including Argo CD auth
+          export TF_VARS="-var=k3d_cluster_name=tf-cluster \
+            -var=github_repo_owner=$REPO_OWNER \
+            -var=helm_chart_name=$CHART_NAME \
+            -var=helm_chart_version=$CHART_VERSION \
+            -var=docker_image_tag=$IMAGE_VERSION \
+            -var=docker_image_repo=ghcr.io \
+            -var=argocd_username=admin \
+            -var=argocd_password=$ARGOCD_PASSWORD \
+            -var=argocd_server=localhost:30080 \
+            -var=argocd_insecure=true"
+          
+            echo "TF_VARS content:"
+            echo "$TF_VARS"
+          
+            echo "TF_VARS=${TF_VARS}" >> "$GITHUB_ENV"
+
+      - name: Terraform Apply Infra Only (without Argo CD App)
+        working-directory: infra/terraform
+        shell: bash
+        run: |
+          echo "TF_VARS: $TF_VARS"
+          terraform apply -auto-approve -var="enable_argocd_app=false" $TF_VARS
+
+      - name: Terraform Apply Argo CD App
+        working-directory: infra/terraform
+        shell: bash
+        env:
+          #          TF_VAR_argocd_auth_token: ${{ secrets.ARGOCD_TOKEN }}
+          TF_VAR_argocd_username: "admin"
+          TF_VAR_argocd_password: ${{ steps.get_admin_password.outputs.admin_password }}
+          TF_VAR_argocd_server: "localhost:30080"
+          TF_VAR_argocd_insecure: "true"
+        run: |
+          echo "TF_VARS: $TF_VARS"
+          terraform apply -auto-approve -var="enable_argocd_app=true" $TF_VARS
