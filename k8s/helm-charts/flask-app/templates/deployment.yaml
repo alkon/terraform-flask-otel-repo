@@ -19,7 +19,6 @@ spec:
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        instrumentation.opentelemetry.io/inject-python: "true"
       labels:
         {{- include "flask-app.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
