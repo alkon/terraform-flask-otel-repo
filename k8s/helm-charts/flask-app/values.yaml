@@ -32,6 +32,7 @@ tolerations: {}
 otel:
   enabled: true
 
-#podAnnotations:
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-python: "true"
 #  instrumentation.opentelemetry.io/inject-otel-agent: "flask-app-instrumentation"
-#    instrumentation.opentelemetry.io/inject-python: "true" <-- Old-fashion
+
