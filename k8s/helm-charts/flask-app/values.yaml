@@ -29,11 +29,13 @@ nodeSelector: {}
 affinity: {}
 tolerations: {}
 
-otel:
-  enabled: true
+#otel:
+#  enabled: true
 
 podAnnotations:
   instrumentation.opentelemetry.io/inject-otel-agent: "flask-app-instrumentation"
 #  instrumentation.opentelemetry.io/inject-python: "true"
+
+
 
 
