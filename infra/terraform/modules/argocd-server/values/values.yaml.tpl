@@ -1,3 +1,4 @@
+initialAdminPassword: "${argocd_password}"
 controller:
   metrics:
     enabled: true
@@ -6,8 +7,6 @@ controller:
 configs:
   cm:
     accounts.admin: "apiKey, login"
-#  secret:
-#    initialAdminPassword: "AvZzzgHbbOqgg-iW"
 server:
   image:
     repository: quay.io/argoproj/argocd
@@ -33,7 +32,7 @@ server:
   dex:
     enabled: false
   redis-ha:
-    enabled: false
+      enabled: false
 repoServer:
   metrics:
     enabled: true

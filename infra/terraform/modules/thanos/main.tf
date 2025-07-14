@@ -78,6 +78,7 @@ resource "helm_release" "thanos_receiver" {
 resource "helm_release" "thanos_query" {
   name       = "thanos-query"
   chart      = "../../chart-backup/thanos/thanos-15.14.1.tgz" # Using 15.14.1
+  #chart      = "oci://registry-1.docker.io/bitnamicharts/thanos"
   version    = "15.14.1"
 
   namespace        = "thanos-ns"

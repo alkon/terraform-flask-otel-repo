@@ -17,6 +17,13 @@ resource "helm_release" "argocd" {
   timeout                    = 600      # Give it more time to deploy.
   atomic                     = true     # Rollback on failure.
 
-  values = [file("${path.module}/values/values.yaml")]
+  # values = [file("${path.module}/values/values.yaml")]
+
+  values = [
+    templatefile("${path.module}/values/values.yaml.tpl", {
+      argocd_password = var.argocd_password # Pass the Terraform variable to the template
+    })
+  ]
+
 }
 

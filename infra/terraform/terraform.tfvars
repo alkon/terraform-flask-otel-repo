@@ -10,7 +10,7 @@ git_repo_name = "terraform-flask-otel-repo"
 # Helm chart details
 helm_chart_repo     = "oci://ghcr.io"
 helm_chart_name     = "flask-app"
-helm_chart_version  = "0.6.0"
+helm_chart_version  = "0.12.0"
 
 # Docker image details
 docker_image_repo   = "ghcr.io"
@@ -23,6 +23,5 @@ flask_app_service_name = "flask-app-srv"
 
 # argocd_auth_token = ""
 argocd_server = "localhost:30080" # HTTP
+argocd_password = "jW9FV6UFr4stItOe"
 argocd_insecure = true
-username = "admin"
-# password = ""

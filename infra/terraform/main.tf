@@ -1,69 +1,9 @@
 # --- Module Deployments ---
 
-# 1. Cert-Manager (for TLS certificates)
-module "cert_manager" {
-  source = "./modules/cert-manager"
-}
-
-# 2. OpenTelemetry Operator (for auto-instrumentation)
-module "otel_operator" {
-  source = "./modules/otel/operator"
-
-  depends_on = [null_resource.wait_for_cert_manager_webhook]
-}
-
-# 3. Thanos (Metrics Receiver and Query)
-module "thanos" {
-  source = "./modules/thanos"
-  depends_on = [
-    module.otel_operator # Thanos Receiver depends on Operator for namespace
-  ]
-}
-
-# 4. OpenTelemetry Collector (receives and exports telemetry)
-module "otel_collector" {
-  source = "./modules/otel/collector"
-  depends_on = [
-    module.otel_operator,
-    module.thanos # OTel Collector depends on Thanos Receiver being ready
-  ]
-
-  # Update endpoint to point to Thanos Receiver using the new variable name
-  # thanos_remote_write_endpoint = "http://thanos-receiver.thanos-ns.svc.cluster.local:19291/api/v1/receive"
-  thanos_remote_write_endpoint = "http://thanos-receiver-receive.thanos-ns.svc.cluster.local:19291/api/v1/receive" # <-- CRITICAL CHANGE
-}
-
-# 5. Prometheus (metrics backend - for other scrapes) - DISABLED FOR NOW
-# module "prometheus" {
-#   source = "./modules/prometheus"
-# }
-
-# 6. Grafana (visualization dashboard)
-module "grafana" {
-  source = "./modules/grafana"
-  # Pass the Thanos Query service endpoint to Grafana using the new variable name
-  thanos_query_url = "http://thanos-query-query.thanos-ns.svc.cluster.local:9090" # <-- CRITICAL CHANGE
-
-  depends_on = [
-    module.thanos # Grafana now depends on Thanos Query being ready
-  ]
-}
-
-#Test module
-# module "flask_app_test" {
-#   source = "./modules/flask-test"
-#
-#   namespace = "flask-app-ns"
-#
-#   depends_on = [
-#     module.otel_operator,
-#     module.otel_collector
-#   ]
-# }
-
-# 7. ArgoCD Server
 module "argocd_server" {
   source = "./modules/argocd-server"
+
+  argocd_password = var.argocd_password
 
   providers = {
     kubernetes = kubernetes
@@ -72,28 +12,284 @@ module "argocd_server" {
   }
 }
 
-# 8. ArgoCD app
-module "argocd_app" {
-  count  = var.enable_argocd_app ? 1 : 0
 
+######################################################################
+
+module "argocd_app_flask_app" {
   source = "./modules/argocd-app"
-
-  # Pass aliased provider from the TF root
   providers = {
     argocd = argocd.main
   }
 
   depends_on = [
+    module.argocd_app_otel_operator,
+    module.argocd_app_otel_instrumentation,
     null_resource.wait_for_argocd_api,
-    module.otel_collector,
-    module.grafana,
-    kubernetes_namespace.flask_app_namespace
+    kubernetes_namespace.flask_app_ns, # Added dependency on the new namespace
   ]
 
-  repo_url              = "https://github.com/${var.github_repo_owner}/${var.git_repo_name}.git"
-  repo_revision         = "HEAD"
-  chart_path            = "k8s/helm-charts/flask-app"
-  flask_app_name        = var.helm_chart_name
-  flask_app_namespace   = var.flask_app_namespace
-  flask_app_helm_values = local.flask_app_helm_values
+  app_name      = "flask-app"
+  app_namespace   = local.flask_app_namespace_name # The namespace where it will deploy
+
+  repo_url      = "https://github.com/alkon/terraform-flask-otel-repo.git"
+  repo_revision = "HEAD"
+
+  chart_path    = "k8s/helm-charts/flask-app"
+  argocd_project = "flask-app-project"
+
 }
+
+######################################################################
+
+module "argocd_app_flask_simulator" {
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_app_flask_app, # Ensure the flask app is up
+    null_resource.wait_for_argocd_api,
+  ]
+
+  app_name        = "flask-simulator"
+  app_namespace   = local.flask_app_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/flask-simulator"
+  argocd_project  = "flask-app-project"
+}
+
+######################################################################
+
+module "argocd_app_cert_manager" {
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_server,
+    kubernetes_namespace.cert_ns,
+    null_resource.wait_for_argocd_api,
+  ]
+
+  app_name        = "cert-manager"
+  app_namespace   = local.cert_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/cert-manager"
+  argocd_project = "flask-app-project"
+
+}
+
+######################################################################
+
+module "argocd_app_otel_instrumentation" {
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_app_otel_operator,
+    module.argocd_app_otel_collector,
+    null_resource.wait_for_argocd_api,
+    kubernetes_namespace.flask_app_ns
+  ]
+
+  app_name      = "otel-instrumentation"
+  # Target namespace is the 'flask-app-ns'
+  app_namespace = "flask-app-ns"
+
+  repo_url      = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision = "HEAD"
+  chart_path    = "platform-apps/otel-config"
+  argocd_project = "flask-app-project"
+}
+
+######################################################################
+
+module "argocd_app_otel_operator" {
+
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_server,
+    kubernetes_namespace.otel_ns,
+    null_resource.wait_for_argocd_api,
+    null_resource.wait_for_cert_manager_webhook
+  ]
+
+  app_name        = "otel-operator"
+  app_namespace   = local.otel_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/otel-operator"
+  argocd_project = "flask-app-project"
+}
+
+######################################################################
+
+module "argocd_app_otel_collector" {
+
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_server,
+    kubernetes_namespace.otel_ns,
+  ]
+
+  app_name        = "otel-collector"
+  app_namespace   = local.otel_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/otel-collector"
+  argocd_project = "flask-app-project"
+}
+
+######################################################################
+module "argocd_app_thanos_receiver" {
+
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_server,
+    kubernetes_namespace.thanos_ns,
+  ]
+
+  app_name        = "thanos-receiver"
+  app_namespace   = local.thanos_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/thanos-receiver"
+  argocd_project = "flask-app-project"
+}
+
+#########################################################################
+
+module "argocd_app_thanos_query" {
+
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_server,
+    kubernetes_namespace.thanos_ns,
+  ]
+
+  app_name        = "thanos-query"
+  app_namespace   = local.thanos_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/thanos-query"
+  argocd_project = "flask-app-project"
+}
+#########################################################################
+module "argocd_app_grafana" {
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_server,
+    kubernetes_namespace.thanos_ns,
+  ]
+
+  app_name        = "grafana-app"
+  app_namespace   = local.monitoring_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/grafana"
+  argocd_project = "flask-app-project"
+}
+
+
+#########################################################################
+
+module "argocd_app_tempo" {
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_server,
+    kubernetes_namespace.monitoring,
+    module.argocd_app_otel_collector,
+    module.argocd_app_grafana
+  ]
+
+  app_name        = "tempo-app"
+  app_namespace   = local.monitoring_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/tempo"
+  argocd_project = "flask-app-project"
+}
+
+#########################################################################
+
+/*
+module "argocd_app_fluent_bit" {
+  source = "./modules/argocd-app"
+
+  providers = {
+    argocd = argocd.main
+  }
+
+  depends_on = [
+    module.argocd_app_loki,
+    # kubernetes_namespace.monitoring
+  ]
+
+  app_name        = "fluent-bit-app"
+  app_namespace   = local.monitoring_namespace_name
+
+  repo_url        = "https://github.com/alkon/app-gitops-manifests-repo.git"
+  repo_revision   = "HEAD"
+
+  chart_path      = "platform-apps/fluent-bit"
+  argocd_project = "flask-app-project"
+}
+*/
+
+#########################################################################
+
