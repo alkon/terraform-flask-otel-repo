@@ -42,7 +42,7 @@ export KUBECONFIG="${KUBECONFIG_PATH}"
 # Wait for the API server to be ready with a robust check
 echo "Waiting for Kubernetes API server to be ready..." >&2
 start_time=$(date +%s)
-timeout_seconds=90 # Wait up to 90 seconds
+timeout_seconds=180 # Wait up to 90 seconds
 sleep_interval=5   # Check every 5 seconds
 
 while ! kubectl cluster-info &>/dev/null; do

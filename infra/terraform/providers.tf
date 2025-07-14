@@ -51,10 +51,9 @@ provider "argocd" {
   alias   = "main"
 
   server_addr = var.argocd_server
-  # auth_token = var.argocd_auth_token
   username    = var.argocd_username
   password    = var.argocd_password
   insecure    = var.argocd_insecure
   plain_text  = true # no need in variable for this
-
+  grpc_web    = false
 }
