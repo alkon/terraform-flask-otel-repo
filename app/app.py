@@ -30,7 +30,11 @@ def checkout():
         time.sleep(random.uniform(0.05, 0.15))
 
         # Call the "payment" microservice (hosted in same Flask app)
-        resp = requests.get("http://localhost:5000/payment", timeout=2)
+        url = "http://flask-app.flask-app-ns.svc.cluster.local:5000/payment"
+        # url = "http://flask-app:5000/payment" # OK: if flask-simulator that hits the EP is in the same namespace
+
+        resp = requests.get(url, timeout=2)
+
         return jsonify({
             "message": "Checkout successful",
             "payment_status": resp.json()
