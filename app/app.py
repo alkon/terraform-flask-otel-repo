@@ -30,7 +30,10 @@ def checkout():
 
         # If slow mode is enabled, add a consistent extra delay
         if SLOW_MODE_ENABLED:
-            time.sleep(random.uniform(0.3, 0.7))  # Add 300-700ms extra delay
+            #time.sleep(random.uniform(0.3, 0.7))  # Add 300-700ms extra delay
+
+            # Guarantee that P95 goes over 1.2s
+            time.sleep(random.uniform(1.0, 1.5))  # Add 1000-1500ms extra delay
 
         # Call the "payment" microservice (hosted in same Flask app)
         url = "http://flask-app.flask-app-ns.svc.cluster.local:5000/payment"
