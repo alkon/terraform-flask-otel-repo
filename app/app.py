@@ -84,6 +84,7 @@ def payment():
 
 
 # New endpoint to toggle slow mode for /checkout
+# Exists form the charts 0.16.0 version
 @app.route("/toggle-slow-mode", methods=["POST"])
 def toggle_slow_mode():
     global SLOW_MODE_ENABLED
